@@ -30,7 +30,8 @@ def registro():
     if password != confirm_password:
         return jsonify({'error': 'Passwords do not match. Please enter matching passwords.'})
 
-    nuevo_registro = Registro(nombre=nombre, email=email, password=password)
+    encrypted_pass = encrypt_password(password)
+    nuevo_registro = Registro(nombre=nombre, email=email, password=encrypted_pass)
     db.session.add(nuevo_registro)
     db.session.commit()
 
@@ -42,11 +43,12 @@ from flask import jsonify
 def iniciar():
     email = request.form.get('login_email')
     password = request.form.get('login_password')
+    encrypted_pass = encrypt_password(password)
 
     # Debugging line
     print(f'Email: {email}, Password: {password}')
 
-    usuario = Registro.query.filter_by(email=email, password=password).first()
+    usuario = Registro.query.filter_by(email=email, password=encrypted_pass).first()
 
     # Debugging line
     print(f'User: {usuario}')
@@ -59,6 +61,16 @@ def iniciar():
 @app.route('/static/<path:filename>')
 def static_files(filename):
     return send_from_directory('static', filename)
+
+import hashlib
+
+def encrypt_password(password: str):
+    #Encondes the password using the library hashlib
+    password = password.encode('utf-8')     #Enconde the password to utf-8
+    hashed = hashlib.sha256(password).hexdigest()
+    return str(hashed)
+
+
 
 
 if __name__ == '__main__':
